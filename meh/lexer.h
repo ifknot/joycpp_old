@@ -23,11 +23,13 @@ namespace meh {
 
 		void run();
 
+	private:
+
 		void parse(std::string&& line);
 
-		std::string delist(stack_t& stack, size_t i);
+		static std::string delist(stack_t& stack, size_t i);
 
-	private:
+		static size_t list_size(stack_t stack);
 
 		/**
 		 * allowed:
@@ -42,10 +44,6 @@ namespace meh {
 		 * 37.e88  (dot before the e)
 		 */
 		static bool is_number(std::string token);
-
-		static size_t list_size(stack_t stack);
-
-		static std::string to_string(stack_t stack);
 
 		//check stack has at least n arguements 
 		static bool arg(size_t n, stack_t stack);

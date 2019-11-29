@@ -50,16 +50,17 @@ namespace meh {
 	}
 
 	std::string lexer::delist(stack_t& stack, size_t i) {
-		stack_t tmp;
+		std::string s;
 		if (i) {
 			stack.pop_back(); //dump ]
+			for(auto j = stack.size() - i; j < stack.size(); ++j) {
+				s += stack[j] + " ";
+			}
 			while (i--) {
-				tmp.push_back(stack.back());
 				stack.pop_back();
 			}
 			stack.pop_back(); //dump [
 		}
-		auto s = to_string(tmp);
 		std::cout << s << "\n";
 		return s;
 	}
@@ -93,7 +94,7 @@ namespace meh {
 		return false;
 	}
 
-	std::string lexer::to_string(stack_t stack) {
+	std::string lexer::to_line(stack_t stack) {
 		std::string line;
 		for (const auto& token : stack) {
 			line += token + " ";
