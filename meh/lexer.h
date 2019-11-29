@@ -25,7 +25,7 @@ namespace meh {
 
 		void parse(std::string& line);
 
-		std::string delist(stack_t& stack);
+		std::string delist(stack_t& stack, size_t i);
 
 	private:
 
@@ -43,30 +43,32 @@ namespace meh {
 		 */
 		static bool is_number(std::string token);
 
+		static size_t list(stack_t stack);
+
 		//check stack has at least n arguements 
-		bool arg(size_t n);
+		static bool arg(size_t n, stack_t stack);
 
 		//check stack has at least n numbers
-		bool num(size_t n);
+		static bool num(size_t n, stack_t stack);
 
-		bool list{ false };
+		bool flag{ false };
 
 		stack_t stack;
 
 		dictionary_t dictionary = {
-			{".",		[&]() { if (arg(1)) { std::cout << BOLDWHITE << stack.back(); } }},
+			{".",		[&]() { if (arg(1, stack)) { std::cout << BOLDWHITE << stack.back(); } }},
 			{".s",		[&]() { for (auto& i : stack) { std::cout << i << " "; } }},
 			//quotations
-			{"[",		[&]() { list = true;  stack.push_back("["); }},
-			{"]",		[&]() { stack.push_back("]"); list = false; }},
+			{"[",		[&]() { flag = true;  stack.push_back("["); }},
+			{"]",		[&]() { stack.push_back("]"); flag = false; }},
 			//combinators
-			//{"i",		[&]() { //read from [ -- ] constructing a string then exec the string}},
+			{"i",		[&]() { auto s = delist(stack, list(stack)); parse(s); }},
 			//stack operations
-			{"dup",		[&]() { if (arg(1)) { stack.push_back(stack.back()); } }},
-			{"pop",		[&]() { if (arg(1)) { stack.pop_back(); } }},
-			{"swap",	[&]() { if (arg(2)) { auto x = stack[stack.size() - 1]; stack[stack.size() - 1] = stack[stack.size() - 2]; stack[stack.size() - 2] = x; } }},
+			{"dup",		[&]() { if (arg(1, stack)) { stack.push_back(stack.back()); } }},
+			{"pop",		[&]() { if (arg(1, stack)) { stack.pop_back(); } }},
+			{"swap",	[&]() { if (arg(2, stack)) { auto x = stack[stack.size() - 1]; stack[stack.size() - 1] = stack[stack.size() - 2]; stack[stack.size() - 2] = x; } }},
 			//math
-			{"+",		[&]() { if (num(2)) { double x, y; 
+			{"+",		[&]() { if (num(2, stack)) { double x, y;
 								std::stringstream ss;
 								x = stod(stack.back()); 
 								stack.pop_back(); 
@@ -74,7 +76,7 @@ namespace meh {
 								stack.pop_back();
 								ss << (x + y);
 								stack.push_back(ss.str()); } }},
-			{"*",		[&]() { if (arg(2)) { double x, y; 
+			{"*",		[&]() { if (num(2, stack)) { double x, y;
 								x = stod(stack.back()); 
 								stack.pop_back(); 
 								y = stod(stack.back()); 

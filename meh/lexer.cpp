@@ -11,15 +11,7 @@ namespace meh {
 				getline(std::cin, line);
 			}
 			
-			try {
-				parse(line);
-			}
-			catch (std::invalid_argument) {
-				std::cout << RED << "no conversion";
-			}
-			catch (std::out_of_range) {
-				std::cout << RED << "\aconverted value would fall out of the range of the result type";
-			}
+			parse(line);
 
 			std::cout << BOLDBLACK << "\tok\n" << RESET;
 
@@ -35,7 +27,7 @@ namespace meh {
 		while (line_stream >> token) {
 			auto it = dictionary.find(token);
 			if (it != dictionary.end()) {
-				if (list && token != "]") {
+				if (flag && token != "]") {
 					stack.push_back(token);
 				}
 				else {
@@ -43,15 +35,31 @@ namespace meh {
 				}
 			}
 			else {
-				double x = std::stod(token);
-				stack.push_back(token);
+				try {
+					double x = std::stod(token);
+					stack.push_back(token);
+				}
+				catch (std::invalid_argument) {
+					std::cout << RED << "no conversion";
+				}
+				catch (std::out_of_range) {
+					std::cout << RED << "\aconverted value would fall out of the range of the result type";
+				}
 			}
 		}
 	}
 
-	std::string lexer::delist(stack_t& stack) {
-
-		return std::string();
+	std::string lexer::delist(stack_t& stack, size_t i) {
+		std::stringstream line;
+		if (i) {
+			stack.pop_back();
+			while (i--) {
+				line << stack.back() << " ";
+				stack.pop_back();
+			}
+			stack.pop_back();
+		}
+		return line.str();
 	}
 	
 	bool lexer::is_number(std::string token) {
@@ -60,7 +68,30 @@ namespace meh {
 		//return std::regex_match(token, std::regex("((\\+|-)?[[:digit:]]+)(\\.(([[:digit:]]+)?))?"));
 	}
 
-	bool lexer::arg(size_t n) {
+	size_t lexer::list(stack_t stack) {
+		if (!arg(2, stack)) {
+			return 0;
+		}
+		if (stack.back() != "]") {
+			std::cout << RED << "no list on stack - missing ]";
+			return 0;
+		}
+		auto i = stack.size() - 2;
+		for (size_t j{ 0 }; j < stack.size() - 2; ++j) {
+			if (stack[i] == "]") {
+				std::cout << RED << "invalid nested list on stack";
+				return 0;
+			}
+			if (stack[i--] == "[") {
+				return j;
+			}
+		}
+		std::cout << RED << "no list on stack - missing [";
+		return false;
+	}
+
+
+	bool lexer::arg(size_t n, stack_t stack) {
 		if (stack.size() < n) {
 			std::cout << RED << "stack underflow";
 			return false;
@@ -70,8 +101,8 @@ namespace meh {
 		}
 	}
 
-	bool lexer::num(size_t n) {
-		if (!arg(n)) {
+	bool lexer::num(size_t n, stack_t stack) {
+		if (!arg(n, stack)) {
 			return false;
 		}
 		auto i = stack.size() - 1;
