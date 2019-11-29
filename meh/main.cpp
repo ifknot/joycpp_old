@@ -6,6 +6,8 @@
 
 int main() {
 
+	std::cout << "*** meh ***\n";
+
 	meh::lexer l;
 
 	l.run();

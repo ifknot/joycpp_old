@@ -45,6 +45,8 @@ namespace meh {
 
 		static size_t list_size(stack_t stack);
 
+		static std::string to_string(stack_t stack);
+
 		//check stack has at least n arguements 
 		static bool arg(size_t n, stack_t stack);
 

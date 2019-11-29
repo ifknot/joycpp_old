@@ -50,16 +50,18 @@ namespace meh {
 	}
 
 	std::string lexer::delist(stack_t& stack, size_t i) {
-		std::stringstream line;
+		stack_t tmp;
 		if (i) {
-			stack.pop_back();
+			stack.pop_back(); //dump ]
 			while (i--) {
-				line << stack.back() << " "; //wrong order
+				tmp.push_back(stack.back());
 				stack.pop_back();
 			}
-			stack.pop_back();
+			stack.pop_back(); //dump [
 		}
-		return line.str();
+		auto s = to_string(tmp);
+		std::cout << s << "\n";
+		return s;
 	}
 	
 	bool lexer::is_number(std::string token) {
@@ -89,6 +91,14 @@ namespace meh {
 		}
 		std::cout << RED << "no list on stack - missing [";
 		return false;
+	}
+
+	std::string lexer::to_string(stack_t stack) {
+		std::string line;
+		for (const auto& token : stack) {
+			line += token + " ";
+		}
+		return line;
 	}
 
 
