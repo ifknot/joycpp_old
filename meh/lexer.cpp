@@ -11,7 +11,7 @@ namespace meh {
 				getline(std::cin, line);
 			}
 			
-			parse(line);
+			parse(std::move(line));
 
 			std::cout << BOLDBLACK << "\tok\n" << RESET;
 
@@ -19,7 +19,7 @@ namespace meh {
 	
 	}
 
-	void lexer::parse(std::string& line) {
+	void lexer::parse(std::string&& line) {
 
 		std::stringstream line_stream(line);
 		std::string token;
@@ -54,7 +54,7 @@ namespace meh {
 		if (i) {
 			stack.pop_back();
 			while (i--) {
-				line << stack.back() << " ";
+				line << stack.back() << " "; //wrong order
 				stack.pop_back();
 			}
 			stack.pop_back();
@@ -68,7 +68,8 @@ namespace meh {
 		//return std::regex_match(token, std::regex("((\\+|-)?[[:digit:]]+)(\\.(([[:digit:]]+)?))?"));
 	}
 
-	size_t lexer::list(stack_t stack) {
+	size_t lexer::list_size(stack_t stack) {
+		//counters for [ & ] to handle nested lists
 		if (!arg(2, stack)) {
 			return 0;
 		}

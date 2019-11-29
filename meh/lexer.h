@@ -23,7 +23,7 @@ namespace meh {
 
 		void run();
 
-		void parse(std::string& line);
+		void parse(std::string&& line);
 
 		std::string delist(stack_t& stack, size_t i);
 
@@ -43,7 +43,7 @@ namespace meh {
 		 */
 		static bool is_number(std::string token);
 
-		static size_t list(stack_t stack);
+		static size_t list_size(stack_t stack);
 
 		//check stack has at least n arguements 
 		static bool arg(size_t n, stack_t stack);
@@ -62,7 +62,7 @@ namespace meh {
 			{"[",		[&]() { flag = true;  stack.push_back("["); }},
 			{"]",		[&]() { stack.push_back("]"); flag = false; }},
 			//combinators
-			{"i",		[&]() { auto s = delist(stack, list(stack)); parse(s); }},
+			{"i",		[&]() { parse(delist(stack, list_size(stack))); }},
 			//stack operations
 			{"dup",		[&]() { if (arg(1, stack)) { stack.push_back(stack.back()); } }},
 			{"pop",		[&]() { if (arg(1, stack)) { stack.pop_back(); } }},
