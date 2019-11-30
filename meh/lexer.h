@@ -18,6 +18,7 @@ namespace meh {
 
 		using stack_t = std::vector<std::string>;
 		using dictionary_t = std::map<std::string, std::function<void()>>;
+		using strops_t = std::pair<size_t, size_t>;
 
 	public:
 
@@ -27,9 +28,9 @@ namespace meh {
 
 		void parse(std::string&& line);
 
-		static std::string delist(stack_t& stack, size_t i);
+		static std::string unstrop(stack_t& stack, strops_t strops);
 
-		static size_t list_size(stack_t stack);
+		static strops_t find_strops(stack_t stack, std::string a, std::string b);
 
 		/**
 		 * allowed:
@@ -56,13 +57,13 @@ namespace meh {
 		stack_t stack;
 
 		dictionary_t dictionary = {
-			{".",		[&]() { if (arg(1, stack)) { std::cout << BOLDWHITE << stack.back(); } }},
-			{".s",		[&]() { for (auto& i : stack) { std::cout << i << " "; } }},
+			{".",		[&]() { if (arg(1, stack)) { std::cout << GREEN << stack.back(); } }},
+			{".s",		[&]() { std::cout << GREEN; for (auto & i : stack) { std::cout << i << " "; } }},
 			//quotations
-			{"[",		[&]() { flag = true;  stack.push_back("["); }},
+			{"[",		[&]() { flag = true; stack.push_back("["); }},
 			{"]",		[&]() { stack.push_back("]"); flag = false; }},
 			//combinators
-			{"i",		[&]() { parse(delist(stack, list_size(stack))); }},
+			{"i",		[&]() { parse(unstrop(stack, find_strops(stack, "[", "]"))); }},
 			//stack operations
 			{"dup",		[&]() { if (arg(1, stack)) { stack.push_back(stack.back()); } }},
 			{"pop",		[&]() { if (arg(1, stack)) { stack.pop_back(); } }},

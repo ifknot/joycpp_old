@@ -13,7 +13,7 @@ namespace meh {
 			
 			parse(std::move(line));
 
-			std::cout << BOLDBLACK << "\tok\n" << RESET;
+			std::cout << BOLDBLACK << "\tok\n" << ((flag) ? GREEN : RESET);
 
 		}
 	
@@ -49,59 +49,64 @@ namespace meh {
 		}
 	}
 
-	std::string lexer::delist(stack_t& stack, size_t i) {
+	std::string lexer::unstrop(stack_t& stack, strops_t strops) {
 		std::string s;
-		if (i) {
-			stack.pop_back(); //dump ]
-			for(auto j = stack.size() - i; j < stack.size(); ++j) {
-				s += stack[j] + " ";
+		if (strops.first < strops.second) {
+			for(auto i = strops.first + 1; i < strops.second; ++i) {
+				s += stack[i] + " ";
 			}
-			while (i--) {
+			while (stack.size() > strops.first) {
 				stack.pop_back();
 			}
-			stack.pop_back(); //dump [
 		}
 		std::cout << s << "\n";
 		return s;
 	}
-	
+
+	lexer::strops_t lexer::find_strops(stack_t stack, std::string a, std::string b) {
+
+		strops_t strops{ 0,0 };
+
+		if (stack.back() != b) {
+			std::cout << RED << "malformed stack top - missing " << b;
+			return strops;
+		}
+
+		if (!arg(3, stack)) {
+			return strops;
+		}
+
+		size_t i{ stack.size() - 1 };
+		size_t n{ 0 };
+
+		while (i >= 0) {
+
+			if (stack[i] == b) {
+				if (n == 0) {
+					std::cout << b << " at " << i << "\n";
+					strops.second = i;
+				}
+				++n;
+			}
+
+			if (stack[i] == a) {
+				--n;
+				if (n == 0) {
+					std::cout << a << " at " << i << "\n";
+					strops.first = i;
+					return strops;
+				}
+			}
+
+			--i;
+		}
+
+		return strops;
+	}
+
 	bool lexer::is_number(std::string token) {
 		return std::regex_match(token, std::regex("[+-]?(?=.)(?:0|[1-9]\\d*)?(?:\.\\d*)?(?:\\d[eE][+-]?\\d+)?"));
-		//return std::regex_match(token, std::regex("[+-]?(\\d+([.]\\d*)?(e[+-]?\\d+)?|[.]\\d+(e[+-]?\\d+)?)"));
-		//return std::regex_match(token, std::regex("((\\+|-)?[[:digit:]]+)(\\.(([[:digit:]]+)?))?"));
 	}
-
-	size_t lexer::list_size(stack_t stack) {
-		//counters for [ & ] to handle nested lists
-		if (!arg(2, stack)) {
-			return 0;
-		}
-		if (stack.back() != "]") {
-			std::cout << RED << "no list on stack - missing ]";
-			return 0;
-		}
-		auto i = stack.size() - 2;
-		for (size_t j{ 0 }; j < stack.size() - 2; ++j) {
-			if (stack[i] == "]") {
-				std::cout << RED << "invalid nested list on stack";
-				return 0;
-			}
-			if (stack[i--] == "[") {
-				return j;
-			}
-		}
-		std::cout << RED << "no list on stack - missing [";
-		return false;
-	}
-
-	std::string lexer::to_line(stack_t stack) {
-		std::string line;
-		for (const auto& token : stack) {
-			line += token + " ";
-		}
-		return line;
-	}
-
 
 	bool lexer::arg(size_t n, stack_t stack) {
 		if (stack.size() < n) {
