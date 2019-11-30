@@ -25,7 +25,9 @@ namespace meh {
 		std::string token;
 
 		while (line_stream >> token) {
+
 			auto it = dictionary.find(token);
+			
 			if (it != dictionary.end()) {
 				if (flag && token != "]") {
 					stack.push_back(token);
@@ -46,24 +48,31 @@ namespace meh {
 					std::cout << RED << "\aconverted value would fall out of the range of the result type";
 				}
 			}
+
 		}
 	}
 
 	std::string lexer::unstrop(stack_t& stack, strops_t strops) {
+
 		std::string s;
+		
 		if (strops.first < strops.second) {
+		
 			for(auto i = strops.first + 1; i < strops.second; ++i) {
 				s += stack[i] + " ";
 			}
+			
 			while (stack.size() > strops.first) {
 				stack.pop_back();
 			}
+
 		}
+
 		std::cout << s << "\n";
 		return s;
 	}
 
-	lexer::strops_t lexer::find_strops(stack_t stack, std::string a, std::string b) {
+	lexer::strops_t lexer::find_strops(stack_t& stack, std::string a, std::string b) {
 
 		strops_t strops{ 0,0 };
 
@@ -83,7 +92,7 @@ namespace meh {
 
 			if (stack[i] == b) {
 				if (n == 0) {
-					std::cout << b << " at " << i << "\n";
+					//std::cout << b << " at " << i << "\n";
 					strops.second = i;
 				}
 				++n;
@@ -92,7 +101,7 @@ namespace meh {
 			if (stack[i] == a) {
 				--n;
 				if (n == 0) {
-					std::cout << a << " at " << i << "\n";
+					//std::cout << a << " at " << i << "\n";
 					strops.first = i;
 					return strops;
 				}
@@ -122,12 +131,15 @@ namespace meh {
 		if (!arg(n, stack)) {
 			return false;
 		}
+
 		auto i = stack.size() - 1;
+		
 		for (size_t j{ 0 }; j < n; ++j) {
 			if (!is_number(stack[i])) {
 				return false;
 			}
 		}
+
 		return true;
 	}
 
