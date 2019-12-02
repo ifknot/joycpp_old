@@ -13,7 +13,7 @@ namespace meh {
 			
 			parse(std::move(line));
 
-			std::cout << BOLDBLACK << "\tok\n" << ((flag) ? GREEN : RESET);
+			std::cout << BOLDBLACK << "\tok\n" << ((stropping) ? GREEN : RESET);
 
 		}
 	
@@ -26,62 +26,70 @@ namespace meh {
 
 		while (line_stream >> token) {
 
-			auto it = dictionary.find(token);
-			
-			if (it != dictionary.end()) {
-				if (flag && token != "]") {
-					stack.push_back(token);
+			if (stropping) {
+				if (token == "[") {
+					//TODO
 				}
-				else {
-					(it->second)();
-				}
+				stack.back() += token + " ";
 			}
 			else {
-				try {
-					double x = std::stod(token);
-					stack.push_back(token);
+
+				auto it = dictionary.find(token);
+
+				if (it != dictionary.end()) {
+					(it->second)();
 				}
-				catch (std::invalid_argument) {
-					std::cout << RED << "no conversion";
+				else {
+					try {
+						double x = std::stod(token);
+						stack.push_back(token);
+					}
+					catch (std::invalid_argument) {
+						std::cout << RED << "no conversion";
+					}
+					catch (std::out_of_range) {
+						std::cout << RED << "\aconverted value would fall out of the range of the result type";
+					}
 				}
-				catch (std::out_of_range) {
-					std::cout << RED << "\aconverted value would fall out of the range of the result type";
-				}
+
 			}
 
 		}
 	}
 
-	std::string lexer::unstrop(stack_t& stack, strops_t strops) {
-
-		std::string s;
-		
-		if (strops.first < strops.second) {
-		
-			for(auto i = strops.first + 1; i < strops.second; ++i) {
-				s += stack[i] + " ";
-			}
-			
-			while (stack.size() > strops.first) {
-				stack.pop_back();
-			}
-
-		}
-
-		std::cout << s << "\n";
-		return s;
+	void lexer::quote(stack_t& stack) {
+		stropping++;
+		stack.push_back("[ ");
 	}
 
-	lexer::strops_t lexer::find_strops(stack_t& stack, std::string a, std::string b) {
+	void lexer::unquote(stack_t& stack) {
+		stack.back() += "]";
+		stropping--;
+	}
+
+	void lexer::dump(stack_t& stack) {
+		std::cout << GREEN;
+		for (const auto& token : stack) {
+			std::cout << token << " ";
+		}
+	}
+
+	std::string lexer::unstrop(stack_t& stack) {
+		auto s = stack.back();
+		stack.pop_back();
+		return s.substr(1, s.size() - 2);
+	}
+
+	lexer::strops_t lexer::find_strops(stack_t& stack, std::string begin, std::string end) {
 
 		strops_t strops{ 0,0 };
 
-		if (stack.back() != b) {
-			std::cout << RED << "malformed stack top - missing " << b;
+		if (stack.back() != end) {
+			std::cout << RED << "malformed stack top - missing " << end;
 			return strops;
 		}
 
-		if (!arg(3, stack)) {
+		if (!args(3, stack)) {
 			return strops;
 		}
 
@@ -90,7 +98,7 @@ namespace meh {
 
 		while (i >= 0) {
 
-			if (stack[i] == b) {
+			if (stack[i] == end) {
 				if (n == 0) {
 					//std::cout << b << " at " << i << "\n";
 					strops.second = i;
@@ -98,7 +106,7 @@ namespace meh {
 				++n;
 			}
 
-			if (stack[i] == a) {
+			if (stack[i] == begin) {
 				--n;
 				if (n == 0) {
 					//std::cout << a << " at " << i << "\n";
@@ -113,13 +121,14 @@ namespace meh {
 		return strops;
 	}
 
-	bool lexer::is_number(std::string token) {
+	bool lexer::is_number(std::string& token) {
 		return std::regex_match(token, std::regex("[+-]?(?=.)(?:0|[1-9]\\d*)?(?:\.\\d*)?(?:\\d[eE][+-]?\\d+)?"));
 	}
 
-	bool lexer::arg(size_t n, stack_t stack) {
+	bool lexer::args(size_t n, stack_t& stack) {
 		if (stack.size() < n) {
-			std::cout << RED << "stack underflow";
+			std::cout << RED << "stack underflow\n";
+			dump(stack);
 			return false;
 		}
 		else {
@@ -127,15 +136,35 @@ namespace meh {
 		}
 	}
 
-	bool lexer::num(size_t n, stack_t stack) {
-		if (!arg(n, stack)) {
+	bool lexer::nums(size_t n, stack_t& stack) {
+		if (!args(n, stack)) {
 			return false;
 		}
 
 		auto i = stack.size() - 1;
 		
 		for (size_t j{ 0 }; j < n; ++j) {
-			if (!is_number(stack[i])) {
+			if (!is_number(stack[i--])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool lexer::is_quoted(line_t& line) {
+		return ((line[0] == '[') && (line[line.size() - 1] == ']')) ? true : false;
+	}
+
+	bool lexer::quotes(size_t n, stack_t& stack) {
+		if (!args(n, stack)) {
+			return false;
+		}
+
+		auto i = stack.size() - 1;
+
+		for (size_t j{ 0 }; j < n; ++j) {
+			if (!is_quoted(stack[i--])) {
 				return false;
 			}
 		}

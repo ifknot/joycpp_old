@@ -17,8 +17,10 @@ namespace meh {
 
 	class lexer {
 
-		using stack_t = std::vector<std::string>;
-		using dictionary_t = std::map<std::string, std::function<void()>>;
+		using token_t = std::string;
+		using line_t = std::string;
+		using stack_t = std::vector<line_t>;
+		using dictionary_t = std::map<token_t, std::function<void()>>;
 		using strops_t = std::pair<size_t, size_t>;
 
 	public:
@@ -27,13 +29,22 @@ namespace meh {
 
 	private:
 
-		void parse(std::string&& line);
+		void parse(line_t&& line);
 
-		static std::string unstrop(stack_t& stack, strops_t strops);
+		void quote(stack_t& stack);
 
-		static strops_t find_strops(stack_t& stack, std::string a, std::string b);
+		void unquote(stack_t& stack);
+
+		static void dump(stack_t& stack);
 
 		static std::string concat(stack_t& stack) { return ""; }
+
+		static std::string unstrop(stack_t& stack);
+
+		static strops_t find_strops(stack_t& stack, std::string begin, std::string end);
+
+		//check stack has at least n arguement(s) 
+		static bool args(size_t n, stack_t& stack);
 
 		/**
 		 * allowed:
@@ -47,80 +58,79 @@ namespace meh {
 		 * +0003   (leading zeros)
 		 * 37.e88  (dot before the e)
 		 */
-		static bool is_number(std::string token);
+		static bool is_number(token_t& token);
 
-		//check stack has at least n arguements 
-		static bool arg(size_t n, stack_t stack);
+		//check stack has at least n number(s)
+		static bool nums(size_t n, stack_t& stack);
 
-		//check stack has at least n numbers
-		static bool num(size_t n, stack_t stack);
+		//check if string is quoted program or list
+		static bool is_quoted(line_t& line);
 
-		bool flag{ false };
+		//check stack has at least n quoted program(s) or list(s)
+		static bool quotes(size_t n, stack_t& stack);
+
+		size_t stropping{ 0 };
 
 		stack_t stack;
 
 		dictionary_t dictionary = {
-			{".",		[&]() { if (arg(1, stack)) { std::cout << GREEN << stack.back(); } }},
-			{".s",		[&]() { std::cout << GREEN; 
-								for (auto & i : stack) { 
-									std::cout << i << " "; 
-								}
-						}},
+			{".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
+			{".s",		[&]() { dump(stack);	}},
 			//lists
-			{"[",		[&]() { flag = true; stack.push_back("["); }},
-			{"]",		[&]() { stack.push_back("]"); flag = false; }},
+			{"[",		[&]() { quote(stack); }},
+			{"]",		[&]() { unquote(stack); }},
 			//{"concat",	[&]() { concat(stack); }}, //strings and lists by pop " or ] and then concat(stack, ")
 			//combinators
-			{"i",		[&]() { parse(unstrop(stack, find_strops(stack, "[", "]"))); }},
+			{"i",		[&]() { if (quotes(1, stack)) { parse(unstrop(stack)); } }},
 			//stack operations
-			{"dup",		[&]() { if (arg(1, stack)) { stack.push_back(stack.back()); } }},
-			{"pop",		[&]() { if (arg(1, stack)) { stack.pop_back(); } }},
-			{"swap",	[&]() { if (arg(2, stack)) { auto x = stack[stack.size() - 1]; 
+			{"dup",		[&]() { if (args(1, stack)) { stack.push_back(stack.back()); } }},
+			{"pop",		[&]() { if (args(1, stack)) { stack.pop_back(); } }},
+			{"swap",	[&]() { if (args(2, stack)) { auto x = stack[stack.size() - 1]; 
 													 stack[stack.size() - 1] = stack[stack.size() - 2]; 
 													 stack[stack.size() - 2] = x; } 
 						}},
 			//math
-			{"+",		[&]() { if (num(2, stack)) { 
+			{"+",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back();
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(x + y));
 						}}},
-			{"-",		[&]() { if (num(2, stack)) { 
+			{"-",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back();
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(x - y));
 						}}},
-			{"*",		[&]() { if (num(2, stack)) { 
+			{"*",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back(); 
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(x * y)); 
 						}}},
-			{"/",		[&]() { if (num(2, stack)) { 
+			{"/",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back(); 
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(x / y)); 
 						}}},
-			{"rem",		[&]() { if (num(2, stack)) { 
+			{"rem",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back(); 
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(fmod(x, y))); 
 						}}},
-			{"abs",		[&]() { if (num(1, stack)) { 
+			{"abs",		[&]() { if (nums(1, stack)) { 
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string(abs(x))); 
 						}}},
-			{"signum",	[&]() { if (num(1, stack)) { 
+			{"signum",	[&]() { if (nums(1, stack)) { 
 								auto x = stod(stack.back());
 								stack.pop_back();
 								stack.push_back(std::to_string((x > 0) - (x < 0)));
