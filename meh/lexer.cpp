@@ -20,7 +20,7 @@ namespace meh {
 	}
 
 	void lexer::debug(size_t error_number) {
-		std::cout << RED << error_number << " : " <<  debug_messages[error_number];
+		std::cout << RED << "error #" << error_number << " : " <<  debug_messages[error_number] << "\n";
 	}
 
 	void lexer::parse(std::string&& line) {
@@ -38,8 +38,9 @@ namespace meh {
 					unquote(stack);
 				}
 				else {
-					stack.back() += token + " ";
+					stack.back() += token + "-";
 				}
+				std::cout << stack.back() << "\n";
 			}
 			else {
 
@@ -64,27 +65,39 @@ namespace meh {
 			}
 
 		}
+		
 	}
 
 	void lexer::quote(stack_t& stack) {
-		stropping++;
-		stack.push_back("[ ");
-		std::cout << stropping << "\n";
+		if (!stropping) {
+			stropping++;
+			stack.push_back("[=");
+		}
+		else {
+			stropping++;
+			stack.back() += "[=";
+		}
+		//std::cout << stropping << "\n";
 	}
 
 	void lexer::unquote(stack_t& stack) {
-		stack.back() += "] ";
-		stropping--;
-		std::cout << stropping << "\n";
+		if (stropping) {
+			stack.back() += "]~";
+			stropping--;
+			//std::cout << stropping << "\n";
+		}
+		else {
+			debug(DNOTSTROPPING);
+		}
 	}
 
 	bool lexer::is_quoted(line_t& line) {
-		return ((line[0] == '[') && (line[line.size() - 1] == ']')) ? true : false;
+		return ((line[0] == '[') && (line[line.size() - 2] == ']')) ? true : false;
 	}
 
 	bool lexer::quotes(size_t n, stack_t& stack) {
 		if (!args(n, stack)) {
-			std::cout << "no args\n";
+			debug(DNOARGS);
 			return false;
 		}
 
@@ -92,7 +105,7 @@ namespace meh {
 
 		for (size_t j{ 0 }; j < n; ++j) {
 			if (!is_quoted(stack[i--])) {
-				std::cout << "not quoted\n";
+				debug(DNOQUOTE);
 				return false;
 			}
 		}
@@ -100,58 +113,10 @@ namespace meh {
 		return true;
 	}
 
-	void lexer::dump(stack_t& stack) {
-		std::cout << GREEN;
-		for (const auto& token : stack) {
-			std::cout << token << " ";
-		}
-	}
-
 	std::string lexer::unstrop(stack_t& stack) {
 		auto s = stack.back();
 		stack.pop_back();
-		return s.substr(1, s.size() - 2);
-	}
-
-	lexer::strops_t lexer::find_strops(stack_t& stack, std::string begin, std::string end) {
-
-		strops_t strops{ 0,0 };
-
-		if (stack.back() != end) {
-			std::cout << RED << "malformed stack top - missing " << end;
-			return strops;
-		}
-
-		if (!args(3, stack)) {
-			return strops;
-		}
-
-		size_t i{ stack.size() - 1 };
-		size_t n{ 0 };
-
-		while (i >= 0) {
-
-			if (stack[i] == end) {
-				if (n == 0) {
-					//std::cout << b << " at " << i << "\n";
-					strops.second = i;
-				}
-				++n;
-			}
-
-			if (stack[i] == begin) {
-				--n;
-				if (n == 0) {
-					//std::cout << a << " at " << i << "\n";
-					strops.first = i;
-					return strops;
-				}
-			}
-
-			--i;
-		}
-
-		return strops;
+		return s.substr(1, s.size() - 3);
 	}
 
 	bool lexer::is_number(std::string& token) {
@@ -160,7 +125,7 @@ namespace meh {
 
 	bool lexer::args(size_t n, stack_t& stack) {
 		if (stack.size() < n) {
-			std::cout << RED << "stack underflow\n";
+			debug(DUNDERFLOW);
 			dump(stack);
 			return false;
 		}
@@ -184,5 +149,25 @@ namespace meh {
 
 		return true;
 	}
+
+	//-----------------------------------------
+
+	void lexer::dump(stack_t& stack) {
+		std::cout << GREEN;
+		for (const auto& token : stack) {
+			std::cout << token << ",";
+		}
+	}
+
+	void lexer::concat(stack_t& stack) {
+		auto s = stack.back().substr(1, stack.back().size());
+		stack.pop_back();
+		stack.back() = stack.back().substr(0, stack.back().size() - 3);
+		stack.back() += s;
+	}
+
+
+
+	//-----------------------------------------
 
 }

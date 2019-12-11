@@ -30,7 +30,7 @@ namespace meh {
 
 	private:
 
-		void debug(size_t error_number);
+		static void debug(size_t error_number);
 
 		void parse(line_t&& line);
 
@@ -44,13 +44,8 @@ namespace meh {
 		//check stack has at least n quoted program(s) or list(s)
 		static bool quotes(size_t n, stack_t& stack);
 
-		static void dump(stack_t& stack);
-
-		static std::string concat(stack_t& stack) { return ""; }
-
+		// remove [, ] & space
 		static std::string unstrop(stack_t& stack);
-
-		static strops_t find_strops(stack_t& stack, std::string begin, std::string end);
 
 		//check stack has at least n arguement(s) 
 		static bool args(size_t n, stack_t& stack);
@@ -72,6 +67,14 @@ namespace meh {
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
 
+		//-------------------------------------------
+
+		static void dump(stack_t& stack);
+
+		static void concat(stack_t& stack);
+
+		//-------------------------------------------
+
 		size_t stropping{ 0 };
 
 		stack_t stack;
@@ -82,7 +85,7 @@ namespace meh {
 			//lists
 			{"[",		[&]() { quote(stack); }},
 			{"]",		[&]() { unquote(stack); }},
-			//{"concat",	[&]() { concat(stack); }}, //strings and lists by pop " or ] and then concat(stack, ")
+			{"concat",	[&]() { if (quotes(2, stack)) { concat(stack); } }}, //strings and lists by pop " or ] and then concat(stack, ")
 			//combinators
 			{"i",		[&]() { if (quotes(1, stack)) { parse(unstrop(stack)); } }},
 			//stack operations

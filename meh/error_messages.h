@@ -12,17 +12,13 @@ namespace meh {
 	static debug_messages_t debug_messages = {
 	{DNOCONVERSION, "unrecognised token"},
 	{DOUTRANGE, "converted value would fall out of the range of the result type"},
-	{DNOARGS, "not enough arguements on stack"}
+	{DNOARGS, "not enough arguements on stack"},
+	{DNOQUOTE, "not a quoted program or list"},
+	{DMALSTACK, "malformed stack - missing"},
+	{DUNDERFLOW, "stack underflow"},
+	{DEMPTYLINE, "no parse empty line"},
+	{DNOTSTROPPING, "ignored ] no matching [ "}
 	};
 
 }
 
-/*
-const size_t DNOCONVERSION = 1;
-	const size_t DOUTRANGE = 2;
-	const size_t DNOARGS = 3;
-	const size_t DNOQUOTE = 4;
-	const size_t DMALSTACK = 5;
-	const size_t DUNDERFLOW = 6;
-}
-*/

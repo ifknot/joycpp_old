@@ -14,4 +14,6 @@ namespace meh {
 	const size_t DNOQUOTE = 4;
 	const size_t DMALSTACK = 5;
 	const size_t DUNDERFLOW = 6;
+	const size_t DEMPTYLINE = 7;
+	const size_t DNOTSTROPPING = 8;
 }
