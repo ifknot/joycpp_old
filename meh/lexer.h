@@ -12,6 +12,7 @@
 #include <math.h>
 
 #include "colour_codes.h"
+#include "error_messages.h"
 
 namespace meh {
 
@@ -29,11 +30,19 @@ namespace meh {
 
 	private:
 
+		void debug(size_t error_number);
+
 		void parse(line_t&& line);
 
 		void quote(stack_t& stack);
 
 		void unquote(stack_t& stack);
+
+		//check if string is quoted program or list
+		static bool is_quoted(line_t& line);
+
+		//check stack has at least n quoted program(s) or list(s)
+		static bool quotes(size_t n, stack_t& stack);
 
 		static void dump(stack_t& stack);
 
@@ -62,12 +71,6 @@ namespace meh {
 
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
-
-		//check if string is quoted program or list
-		static bool is_quoted(line_t& line);
-
-		//check stack has at least n quoted program(s) or list(s)
-		static bool quotes(size_t n, stack_t& stack);
 
 		size_t stropping{ 0 };
 

@@ -19,6 +19,10 @@ namespace meh {
 	
 	}
 
+	void lexer::debug(size_t error_number) {
+		std::cout << RED << error_number << " : " <<  debug_messages[error_number];
+	}
+
 	void lexer::parse(std::string&& line) {
 
 		std::stringstream line_stream(line);
@@ -28,9 +32,14 @@ namespace meh {
 
 			if (stropping) {
 				if (token == "[") {
-					//TODO
+					quote(stack);
 				}
-				stack.back() += token + " ";
+				else if (token == "]") {
+					unquote(stack);
+				}
+				else {
+					stack.back() += token + " ";
+				}
 			}
 			else {
 
@@ -45,10 +54,10 @@ namespace meh {
 						stack.push_back(token);
 					}
 					catch (std::invalid_argument) {
-						std::cout << RED << "no conversion";
+						debug(DNOCONVERSION);
 					}
 					catch (std::out_of_range) {
-						std::cout << RED << "\aconverted value would fall out of the range of the result type";
+						debug(DOUTRANGE);
 					}
 				}
 
@@ -60,11 +69,35 @@ namespace meh {
 	void lexer::quote(stack_t& stack) {
 		stropping++;
 		stack.push_back("[ ");
+		std::cout << stropping << "\n";
 	}
 
 	void lexer::unquote(stack_t& stack) {
-		stack.back() += "]";
+		stack.back() += "] ";
 		stropping--;
+		std::cout << stropping << "\n";
+	}
+
+	bool lexer::is_quoted(line_t& line) {
+		return ((line[0] == '[') && (line[line.size() - 1] == ']')) ? true : false;
+	}
+
+	bool lexer::quotes(size_t n, stack_t& stack) {
+		if (!args(n, stack)) {
+			std::cout << "no args\n";
+			return false;
+		}
+
+		auto i = stack.size() - 1;
+
+		for (size_t j{ 0 }; j < n; ++j) {
+			if (!is_quoted(stack[i--])) {
+				std::cout << "not quoted\n";
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	void lexer::dump(stack_t& stack) {
@@ -145,26 +178,6 @@ namespace meh {
 		
 		for (size_t j{ 0 }; j < n; ++j) {
 			if (!is_number(stack[i--])) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool lexer::is_quoted(line_t& line) {
-		return ((line[0] == '[') && (line[line.size() - 1] == ']')) ? true : false;
-	}
-
-	bool lexer::quotes(size_t n, stack_t& stack) {
-		if (!args(n, stack)) {
-			return false;
-		}
-
-		auto i = stack.size() - 1;
-
-		for (size_t j{ 0 }; j < n; ++j) {
-			if (!is_quoted(stack[i--])) {
 				return false;
 			}
 		}
