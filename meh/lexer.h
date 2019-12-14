@@ -14,7 +14,7 @@
 #include "colour_codes.h"
 #include "error_messages.h"
 
-namespace meh {
+namespace joy {
 
 	class lexer {
 
@@ -25,13 +25,12 @@ namespace meh {
 		using joy_dictionary_t = std::map<token_t, line_t>;
 		using strops_t = std::pair<size_t, size_t>;
 
-		enum class state_t { parsing, stropping };
+		enum class state_t { parsing, stropping, naming, pending, defining };
 
 		state_t state{ state_t::parsing };
 		size_t strops{ 0 };
 		stack_t stack;
-
-		
+		token_t atom_name;
 
 	public:
 
@@ -40,6 +39,10 @@ namespace meh {
 	private:
 
 		static void debug(size_t error_number);
+
+		static void list_sys(cpp_dictionary_t& dictionary);
+
+		static void list_joy(joy_dictionary_t& dictionary);
 
 		void parse(line_t&& line);
 
@@ -52,6 +55,12 @@ namespace meh {
 		void quote(stack_t& stack);
 
 		void unquote(stack_t& stack);
+
+		void name(stack_t& stack);
+
+		void define(stack_t& stack);
+
+		void undefine(stack_t& stack);
 
 		/**
 		 * allowed:
@@ -85,11 +94,15 @@ namespace meh {
 		//------------------------------------------
 
 		cpp_dictionary_t sys_atoms = {
+//special
 {".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
-{".s",		[&]() { std::cout << GREEN;
-					for (auto rit = stack.rbegin(); rit != stack.rend(); ++rit) {
-						std::cout << *rit << std::endl;
-					}	}},
+//defines
+{"SYSDEF", [&]() { list_sys(sys_atoms); }}, 
+{"JOYDEF", [&]() { list_joy(joy_atoms); }},
+{"USERDEF", [&]() { list_joy(user_atoms); }},
+{"DEFINE",	[&]() { name(stack); }},
+{"==",		[&]() { define(stack); }},
+{";",		[&]() { name(stack); }},
 //lists
 {"[",		[&]() { quote(stack); }},
 {"]",		[&]() { unquote(stack); }},
@@ -133,6 +146,10 @@ namespace meh {
 					stack.push_back(result);
 					} }},
 //stack operations
+{".s",		[&]() { std::cout << GREEN;
+					for (auto rit = stack.rbegin(); rit != stack.rend(); ++rit) {
+						std::cout << *rit << std::endl;
+					}	}},
 {"dup",		[&]() { if (args(1, stack)) { stack.push_back(stack.back()); } }},
 {"pop",		[&]() { if (args(1, stack)) { stack.pop_back(); } }},
 {"swap",	[&]() { if (args(2, stack)) {
@@ -193,16 +210,16 @@ namespace meh {
 				{},
 				{},
 				//special
-				{"quit",		[&]() { std::exit(0); }}	//Exit from Meh (Joy).
+				{"quit",		[&]() { std::exit(0); }}	//Exit from Joy.
 };
 
-joy_dictionary_t joy_atoms{
-
+joy_dictionary_t joy_atoms {
 {"swons", "swap cons" }
-
 };
 
-		};
+joy_dictionary_t user_atoms {};
+
+		}; 
 
 		}
 

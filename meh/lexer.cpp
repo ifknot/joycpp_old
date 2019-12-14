@@ -1,7 +1,7 @@
 #include "lexer.h"
 #include <cassert>
 
-namespace meh {
+namespace joy {
 
 	void lexer::run() {
 		while (true) {
@@ -14,7 +14,22 @@ namespace meh {
 			
 			parse(std::move(line));
 
-			std::cout << BOLDBLACK << "\tok\n" << ((strops) ? GREEN : RESET);
+			std::cout << BOLDBLACK << "\tok\n";
+			switch (state) {
+			case state_t::parsing:
+				std::cout << RESET;
+				break;
+			case state_t::stropping:
+				std::cout << GREEN;
+				break;
+			case state_t::pending:
+			case state_t::naming:
+				std::cout << YELLOW;
+				break;
+			case state_t::defining:
+				std::cout << BOLDYELLOW;
+				break;
+			}
 
 		}
 	
@@ -24,14 +39,60 @@ namespace meh {
 		std::cout << RED << "error #" << error_number << " : " <<  debug_messages[error_number] << "\n";
 	}
 
+	void lexer::list_sys(cpp_dictionary_t& dictionary) {
+		std::cout << YELLOW;
+		for (auto item : dictionary) {
+			std::cout << item.first << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	void lexer::list_joy(joy_dictionary_t& dictionary) {
+		std::cout << YELLOW;
+		for (auto item : dictionary) {
+			std::cout << item.first << " == " << item.second << "\n";
+		}
+	}
+
 	void lexer::parse(std::string&& line) {
 
 		std::stringstream line_stream(line);
-		std::string token;
+		token_t token; 
 
 		while (line_stream >> token) {
 
 			switch (state) {
+			case state_t::naming:
+				atom_name = token;
+				if (!user_atoms.count(atom_name)) {
+					user_atoms[atom_name] = "";
+					state = state_t::pending;
+				}
+				else {
+					state = state_t::parsing;
+					debug(DATOMEXISTS);
+				}
+				break;
+			case state_t::pending:
+				if (token == "==") {
+					state = state_t::defining;
+				}
+				else {
+					state = state_t::parsing;
+					debug(DNOTDEFINING);
+				}
+				break;
+			case state_t::defining:
+				if (token == ".") {
+					state = state_t::parsing;
+				}
+				else if (token == ";") {
+					state = state_t::naming;
+				}
+				else {
+					user_atoms[atom_name] = user_atoms[atom_name] + token + " ";
+				}
+				break;
 			case state_t::stropping:
 				if (token == "[") {
 					quote(stack);
@@ -44,15 +105,15 @@ namespace meh {
 				}
 				break;
 			case state_t::parsing:
-				if (can_parse(token, sys_atoms)) {}
-				else if (can_parse(token, joy_atoms)) {}
-				//else if (can_parse(token, user_atoms)) {}
+				if ((can_parse(token, sys_atoms)) ||
+					(can_parse(token, joy_atoms)) ||				
+					(can_parse(token, user_atoms))) {}
 				else {
 					pod_parse(token);
 				}
 				break;
 			default:
-				debug(DNOCONVERSION);
+				debug(DNOSTATE);
 			}
 
 		}
@@ -70,9 +131,9 @@ namespace meh {
 		}
 	}
 
-	bool lexer::can_parse(token_t token, joy_dictionary_t tokens) {
-		auto it = joy_atoms.find(token);
-		if (it != joy_atoms.end()) {
+	bool lexer::can_parse(token_t token, joy_dictionary_t dictionary) {
+		auto it = dictionary.find(token);
+		if (it != dictionary.end()) {
 			auto s = it->second;
 			parse(std::move(s));
 			return true;
@@ -116,6 +177,18 @@ namespace meh {
 		else {
 			debug(DNOTSTROPPING);
 		}
+	}
+
+	void lexer::name(stack_t& stack) {
+		state = state_t::naming;
+	}
+
+	void lexer::define(stack_t& stack) {
+		state = state_t::defining;
+	}
+
+	void lexer::undefine(stack_t& stack) {
+		state = state_t::parsing;
 	}
 
 	bool lexer::is_quoted(line_t& line) {

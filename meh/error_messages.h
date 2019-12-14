@@ -5,11 +5,12 @@
 
 #include "error_numbers.h"
 
-namespace meh {
+namespace joy {
 
 	using debug_messages_t = std::map<error_number_t, std::string>;
 
 	static debug_messages_t debug_messages = {
+	{DNOSTATE, "unrecognised state"},
 	{DNOCONVERSION, "unrecognised token"},
 	{DOUTRANGE, "converted value would fall out of the range of the result type"},
 	{DNOARGS, "not enough arguements on stack"},
@@ -17,7 +18,9 @@ namespace meh {
 	{DMALSTACK, "malformed stack - missing"},
 	{DUNDERFLOW, "stack underflow"},
 	{DEMPTYLINE, "no parse empty line"},
-	{DNOTSTROPPING, "ignored ] no matching [ "}
+	{DNOTSTROPPING, "ignored ] no matching [ "},
+	{DNOTDEFINING, "expected =="},
+	{DATOMEXISTS, "atom already exists"}
 	};
 
 }
