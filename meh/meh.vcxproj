@@ -128,9 +128,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="colour_codes.h" />
+    <ClInclude Include="cpp_atoms.h" />
     <ClInclude Include="error_messages.h" />
     <ClInclude Include="error_numbers.h" />
+    <ClInclude Include="joy_atoms.h" />
     <ClInclude Include="lexer.h" />
+    <ClInclude Include="user_atoms.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

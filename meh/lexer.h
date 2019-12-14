@@ -74,100 +74,15 @@ namespace meh {
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
 
-		//-------------------------------------------
-
-		static void dump(stack_t& stack);
-
-		static void concat(stack_t& stack);
-
-		static void cons(stack_t& stack);
-
-		static void append(stack_t& stack);
-
-		//-------------------------------------------
-
 		size_t stropping{ 0 };
 
 		stack_t stack;
 
-		cpp_dictionary_t sys_atoms = {
-			{".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
-			{".s",		[&]() { dump(stack);	}},
-			//lists
-			{"[",		[&]() { quote(stack); }},
-			{"]",		[&]() { unquote(stack); }},
-			{"cons",	[&]() { if (args(2, stack) && quotes(1, stack)) { cons(stack); } }},
-			{"append",  [&]() { if (args(2, stack) && quotes(1, stack)) { append(stack); } }},
-			{"concat",	[&]() { if (quotes(2, stack)) { concat(stack); } }}, //strings and lists by pop " or ] and then concat(stack, ")
-			//combinators
-			{"i",		[&]() { if (quotes(1, stack)) { parse(unstrop(stack)); } }},
-			//stack operations
-			{"dup",		[&]() { if (args(1, stack)) { stack.push_back(stack.back()); } }},
-			{"pop",		[&]() { if (args(1, stack)) { stack.pop_back(); } }},
-			{"swap",	[&]() { if (args(2, stack)) { auto x = stack[stack.size() - 1]; 
-													 stack[stack.size() - 1] = stack[stack.size() - 2]; 
-													 stack[stack.size() - 2] = x; } 
-						}},
-			//math
-			{"true",	[&]() { pod_parse("1"); }},
-			{"false",	[&]() { pod_parse("0"); }},
-			{"+",		[&]() { if (nums(2, stack)) { 
-								auto y = stod(stack.back());
-								stack.pop_back();
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(x + y));
-						}}},
-			{"-",		[&]() { if (nums(2, stack)) { 
-								auto y = stod(stack.back());
-								stack.pop_back();
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(x - y));
-						}}},
-			{"*",		[&]() { if (nums(2, stack)) { 
-								auto y = stod(stack.back());
-								stack.pop_back(); 
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(x * y)); 
-						}}},
-			{"/",		[&]() { if (nums(2, stack)) { 
-								auto y = stod(stack.back());
-								stack.pop_back(); 
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(x / y)); 
-						}}},
-			{"rem",		[&]() { if (nums(2, stack)) { 
-								auto y = stod(stack.back());
-								stack.pop_back(); 
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(fmod(x, y))); 
-						}}},
-			{"abs",		[&]() { if (nums(1, stack)) { 
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string(abs(x))); 
-						}}},
-			{"signum",	[&]() { if (nums(1, stack)) { 
-								auto x = stod(stack.back());
-								stack.pop_back();
-								stack.push_back(std::to_string((x > 0) - (x < 0)));
-						}}},
-			//io
-			{},
-			{},
-			//special
-			{"quit",		[&]() { std::exit(0); }}	//Exit from Meh (Joy).
-		};
+		#include "cpp_atoms.h"
 
-		joy_dictionary_t joy_atoms{
-			{"swons", "swap cons" }
-		};
+		#include "joy_atoms.h"
 
-		joy_dictionary_t user_atoms{};
+		#include "user_atoms.h"
 
 	};
 

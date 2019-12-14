@@ -151,7 +151,6 @@ namespace meh {
 	bool lexer::args(size_t n, stack_t& stack) {
 		if (stack.size() < n) {
 			debug(DUNDERFLOW);
-			dump(stack);
 			return false;
 		}
 		else {
@@ -174,36 +173,5 @@ namespace meh {
 
 		return true;
 	}
-
-	//-----------------------------------------
-
-	void lexer::dump(stack_t& stack) {
-		std::cout << GREEN;
-		for (auto rit = stack.rbegin(); rit != stack.rend(); ++rit) {
-			std::cout << *rit << std::endl;
-		}
-		
-	}
-
-	void lexer::concat(stack_t& stack) {
-		auto s = stack.back().substr(1, stack.back().size());
-		stack.pop_back();
-		stack.back() = stack.back().substr(0, stack.back().size() - 3);
-		stack.back() += s;
-	}
-
-	void lexer::cons(stack_t& stack) {
-		auto s = stack.back().substr(1, stack.back().size());
-		stack.pop_back();
-		stack.back() = "[ " + stack.back() + s;
-	}
-
-	void lexer::append(stack_t& stack) {
-		auto s = stack.back().substr(0, stack.back().size() - 2);
-		stack.pop_back();
-		stack.back() = s + stack.back() + " ]";
-	}
-
-	//-----------------------------------------
 
 }

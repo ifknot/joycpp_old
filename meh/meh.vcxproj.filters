@@ -35,5 +35,14 @@
     <ClInclude Include="error_numbers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="joy_atoms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp_atoms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="user_atoms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
