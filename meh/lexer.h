@@ -25,6 +25,14 @@ namespace meh {
 		using joy_dictionary_t = std::map<token_t, line_t>;
 		using strops_t = std::pair<size_t, size_t>;
 
+		enum class state_t { parsing, stropping };
+
+		state_t state{ state_t::parsing };
+		size_t strops{ 0 };
+		stack_t stack;
+
+		
+
 	public:
 
 		void run();
@@ -73,10 +81,6 @@ namespace meh {
 
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
-
-		size_t stropping{ 0 };
-
-		stack_t stack;
 
 		//------------------------------------------
 

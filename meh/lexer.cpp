@@ -14,7 +14,7 @@ namespace meh {
 			
 			parse(std::move(line));
 
-			std::cout << BOLDBLACK << "\tok\n" << ((stropping) ? GREEN : RESET);
+			std::cout << BOLDBLACK << "\tok\n" << ((strops) ? GREEN : RESET);
 
 		}
 	
@@ -31,7 +31,8 @@ namespace meh {
 
 		while (line_stream >> token) {
 
-			if (stropping) {
+			switch (state) {
+			case state_t::stropping:
 				if (token == "[") {
 					quote(stack);
 				}
@@ -41,16 +42,17 @@ namespace meh {
 				else {
 					stack.back() += token + " ";
 				}
-				//std::cout << stack.back() << "\n";
-			}
-			else {
+				break;
+			case state_t::parsing:
 				if (can_parse(token, sys_atoms)) {}
 				else if (can_parse(token, joy_atoms)) {}
 				//else if (can_parse(token, user_atoms)) {}
 				else {
 					pod_parse(token);
 				}
-
+				break;
+			default:
+				debug(DNOCONVERSION);
 			}
 
 		}
@@ -94,22 +96,22 @@ namespace meh {
 	}
 
 	void lexer::quote(stack_t& stack) {
-		if (!stropping) {
-			stropping++;
+		if (!strops) {
+			strops++;
 			stack.push_back("[ ");
+			state = state_t::stropping;
 		}
 		else {
-			stropping++;
+			strops++;
 			stack.back() += "[ ";
 		}
-		//std::cout << stropping << "\n";
 	}
 
 	void lexer::unquote(stack_t& stack) {
-		if (stropping) {
+		if (strops) {
 			stack.back() += "] ";
-			stropping--;
-			//std::cout << stropping << "\n";
+			strops--;
+			if (strops == 0) state =  state_t::parsing;
 		}
 		else {
 			debug(DNOTSTROPPING);
