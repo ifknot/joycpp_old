@@ -160,7 +160,9 @@ namespace meh {
 			{"quit",		[&]() { std::exit(0); }}	//Exit from Meh (Joy).
 		};
 
-		joy_dictionary_t joy_atoms{};
+		joy_dictionary_t joy_atoms{
+			{"swons", "swap cons" }
+		};
 
 		joy_dictionary_t user_atoms{};
 

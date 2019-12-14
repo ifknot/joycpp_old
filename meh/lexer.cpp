@@ -69,7 +69,15 @@ namespace meh {
 	}
 
 	bool lexer::can_parse(token_t token, joy_dictionary_t tokens) {
-		return false;
+		auto it = joy_atoms.find(token);
+		if (it != joy_atoms.end()) {
+			auto s = it->second;
+			parse(std::move(s));
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	void lexer::pod_parse(token_t token) {
