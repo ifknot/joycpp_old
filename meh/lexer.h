@@ -103,6 +103,8 @@ namespace meh {
 													 stack[stack.size() - 2] = x; } 
 						}},
 			//math
+			{"true",	[&]() { pod_parse("1"); }},
+			{"false",	[&]() { pod_parse("0"); }},
 			{"+",		[&]() { if (nums(2, stack)) { 
 								auto y = stod(stack.back());
 								stack.pop_back();
