@@ -21,7 +21,8 @@ namespace meh {
 		using token_t = std::string;
 		using line_t = std::string;
 		using stack_t = std::vector<line_t>;
-		using dictionary_t = std::map<token_t, std::function<void()>>;
+		using cpp_dictionary_t = std::map<token_t, std::function<void()>>;
+		using joy_dictionary_t = std::map<token_t, line_t>;
 		using strops_t = std::pair<size_t, size_t>;
 
 	public:
@@ -34,21 +35,13 @@ namespace meh {
 
 		void parse(line_t&& line);
 
+		bool can_parse(token_t token, cpp_dictionary_t tokens);
+
+		bool can_parse(token_t token, joy_dictionary_t tokens);
+
 		void quote(stack_t& stack);
 
 		void unquote(stack_t& stack);
-
-		//check if string is quoted program or list
-		static bool is_quoted(line_t& line);
-
-		//check stack has at least n quoted program(s) or list(s)
-		static bool quotes(size_t n, stack_t& stack);
-
-		// remove [, ] & space
-		static std::string unstrop(stack_t& stack);
-
-		//check stack has at least n arguement(s) 
-		static bool args(size_t n, stack_t& stack);
 
 		/**
 		 * allowed:
@@ -63,6 +56,18 @@ namespace meh {
 		 * 37.e88  (dot before the e)
 		 */
 		static bool is_number(token_t& token);
+
+		//check if string is quoted program or list
+		static bool is_quoted(line_t& line);
+
+		//check stack has at least n quoted program(s) or list(s)
+		static bool quotes(size_t n, stack_t& stack);
+
+		// remove [, ] & space
+		static std::string unstrop(stack_t& stack);
+
+		//check stack has at least n arguement(s) 
+		static bool args(size_t n, stack_t& stack);
 
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
@@ -79,7 +84,7 @@ namespace meh {
 
 		stack_t stack;
 
-		dictionary_t dictionary = {
+		cpp_dictionary_t sys_atoms = {
 			{".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
 			{".s",		[&]() { dump(stack);	}},
 			//lists
@@ -147,6 +152,10 @@ namespace meh {
 			//special
 			{"quit",		[&]() { std::exit(0); }}	//Exit from Meh (Joy).
 		};
+
+		joy_dictionary_t joy_atoms{};
+
+		joy_dictionary_t user_atoms{};
 
 	};
 

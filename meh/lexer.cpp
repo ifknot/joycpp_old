@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <cassert>
 
 namespace meh {
 
@@ -38,17 +39,12 @@ namespace meh {
 					unquote(stack);
 				}
 				else {
-					stack.back() += token + "-";
+					stack.back() += token + " ";
 				}
-				std::cout << stack.back() << "\n";
+				//std::cout << stack.back() << "\n";
 			}
 			else {
-
-				auto it = dictionary.find(token);
-
-				if (it != dictionary.end()) {
-					(it->second)();
-				}
+				if (can_parse(token, sys_atoms)) {}
 				else {
 					try {
 						double x = std::stod(token);
@@ -68,21 +64,36 @@ namespace meh {
 		
 	}
 
+	bool lexer::can_parse(token_t token, cpp_dictionary_t tokens) {
+		auto it = sys_atoms.find(token);
+		if (it != sys_atoms.end()) {
+			(it->second)();
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	bool lexer::can_parse(token_t token, joy_dictionary_t tokens) {
+		return false;
+	}
+
 	void lexer::quote(stack_t& stack) {
 		if (!stropping) {
 			stropping++;
-			stack.push_back("[=");
+			stack.push_back("[ ");
 		}
 		else {
 			stropping++;
-			stack.back() += "[=";
+			stack.back() += "[ ";
 		}
 		//std::cout << stropping << "\n";
 	}
 
 	void lexer::unquote(stack_t& stack) {
 		if (stropping) {
-			stack.back() += "]~";
+			stack.back() += "] ";
 			stropping--;
 			//std::cout << stropping << "\n";
 		}
@@ -154,9 +165,10 @@ namespace meh {
 
 	void lexer::dump(stack_t& stack) {
 		std::cout << GREEN;
-		for (const auto& token : stack) {
-			std::cout << token << ",";
+		for (auto rit = stack.rbegin(); rit != stack.rend(); ++rit) {
+			std::cout << *rit << std::endl;
 		}
+		
 	}
 
 	void lexer::concat(stack_t& stack) {
