@@ -14,6 +14,7 @@ int main() {
 		<< BOLDGREEN << "\tinside a list definition\n" << RESET
 		<< YELLOW << "\tfunction printout\n"
 		<< BOLDYELLOW << "\tinside a function definition\n" << RESET
+		<< BOLDBLACK << "\tmessages\n"
 		<< BOLDWHITE << "\tinteractive\n\n"
 		;
 
