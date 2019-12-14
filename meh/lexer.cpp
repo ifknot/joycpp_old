@@ -198,6 +198,12 @@ namespace meh {
 		stack.back() = "[ " + stack.back() + s;
 	}
 
+	void lexer::append(stack_t& stack) {
+		auto s = stack.back().substr(0, stack.back().size() - 2);
+		stack.pop_back();
+		stack.back() = s + stack.back() + " ]";
+	}
+
 	//-----------------------------------------
 
 }
