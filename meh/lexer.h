@@ -39,6 +39,8 @@ namespace meh {
 
 		bool can_parse(token_t token, joy_dictionary_t tokens);
 
+		void pod_parse(token_t token);
+
 		void quote(stack_t& stack);
 
 		void unquote(stack_t& stack);

@@ -45,17 +45,10 @@ namespace meh {
 			}
 			else {
 				if (can_parse(token, sys_atoms)) {}
+				else if (can_parse(token, joy_atoms)) {}
+				//else if (can_parse(token, user_atoms)) {}
 				else {
-					try {
-						double x = std::stod(token);
-						stack.push_back(token);
-					}
-					catch (std::invalid_argument) {
-						debug(DNOCONVERSION);
-					}
-					catch (std::out_of_range) {
-						debug(DOUTRANGE);
-					}
+					pod_parse(token);
 				}
 
 			}
@@ -77,6 +70,19 @@ namespace meh {
 
 	bool lexer::can_parse(token_t token, joy_dictionary_t tokens) {
 		return false;
+	}
+
+	void lexer::pod_parse(token_t token) {
+		try {
+			double x = std::stod(token);
+			stack.push_back(token);
+		}
+		catch (std::invalid_argument) {
+			debug(DNOCONVERSION);
+		}
+		catch (std::out_of_range) {
+			debug(DOUTRANGE);
+		}
 	}
 
 	void lexer::quote(stack_t& stack) {
