@@ -80,6 +80,8 @@ namespace meh {
 
 		static void concat(stack_t& stack);
 
+		static void cons(stack_t& stack);
+
 		//-------------------------------------------
 
 		size_t stropping{ 0 };
@@ -92,6 +94,7 @@ namespace meh {
 			//lists
 			{"[",		[&]() { quote(stack); }},
 			{"]",		[&]() { unquote(stack); }},
+			{"cons",	[&]() { if (args(2, stack) && quotes(1, stack)) { cons(stack); } }},
 			{"concat",	[&]() { if (quotes(2, stack)) { concat(stack); } }}, //strings and lists by pop " or ] and then concat(stack, ")
 			//combinators
 			{"i",		[&]() { if (quotes(1, stack)) { parse(unstrop(stack)); } }},
