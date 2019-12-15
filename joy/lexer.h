@@ -96,7 +96,7 @@ namespace joy {
 		static int as_bool(stack_t& stack);
 
 		//convert number to int
-		static int as_int(stack_t& token);
+		static int as_int(stack_t& stack);
 
 		//check stack has at least n quoted program(s) or list(s)
 		static bool quotes(size_t n, stack_t& stack);

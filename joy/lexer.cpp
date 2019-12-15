@@ -224,6 +224,12 @@ namespace joy {
 		return n;
 	}
 
+	int lexer::as_int(stack_t& stack) {
+		auto n = stoi(stack.back());
+		stack.pop_back();
+		return n;
+	}
+
 	double lexer::as_double(stack_t& stack) {
 		auto n = stod(stack.back());
 		stack.pop_back();
