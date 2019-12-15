@@ -193,6 +193,36 @@ namespace joy {
 						stack[stack.size() - 2] = x;
 					}
 				}},
+//relational operators
+{"=",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) == as_double(stack)));
+					} else debug(DWRONGTYPES);
+				}},
+{"<",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) > as_double(stack)));
+					}
+ else debug(DWRONGTYPES);
+}},
+{">",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) < as_double(stack)));
+					}
+ else debug(DWRONGTYPES);
+}},
+{"!=",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) != as_double(stack)));
+					}
+ else debug(DWRONGTYPES);
+}},
+{"<=",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) >= as_double(stack)));
+					}
+ else debug(DWRONGTYPES);
+}},
+{">=",		[&]() { if (nums(2, stack)) {
+						stack.push_back(stringify(as_double(stack) <= as_double(stack)));
+					}
+ else debug(DWRONGTYPES);
+}},
 //boolean
 {"true",	[&]() { stack.push_back("true"); }},
 {"false",	[&]() { stack.push_back("false"); }},
@@ -224,7 +254,7 @@ namespace joy {
 					} else debug(DWRONGTYPES);
 				}},
 {"abs",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(abs(as_double(stack)))); } else debug(DWRONGTYPES); }},
-{"signum",	[&]() { if (nums(1, stack)) {
+{"sign",	[&]() { if (nums(1, stack)) {
 						auto x = as_double(stack);
 						stack.push_back(std::to_string((x > 0) - (x < 0)));
 					} else debug(DWRONGTYPES);

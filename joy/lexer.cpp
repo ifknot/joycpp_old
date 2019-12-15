@@ -271,7 +271,7 @@ namespace joy {
 		//bools as well or restrict?
 		if (is_char(stack.back())) {
 			char c = stack.back()[0];
-			std::cout << "ascii = " << (int)(c) << "\n";
+			//std::cout << "ascii = " << (int)(c) << "\n";
 			stack.pop_back();
 			return_type = pod_t::char_t;
 			return c;
