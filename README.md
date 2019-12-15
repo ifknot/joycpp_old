@@ -8,7 +8,7 @@ Inspired by the [Joy programming language](https://github.com/ifknot/joycpp/wiki
 
 [joycpp interpreter](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
 
-[JoyTutorial](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
+[Joy Tutorial](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
 
 
 
