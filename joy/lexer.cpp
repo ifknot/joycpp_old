@@ -214,6 +214,12 @@ namespace joy {
 		return ((line[0] == '[') && (line[line.size() - 2] == ']')) ? true : false;
 	}
 
+	int lexer::as_bool(stack_t& stack) {
+		auto n = stoi(stack.back());
+		stack.pop_back();
+		return (n) ? true : false;
+	}
+
 	double lexer::as_double(stack_t& stack) {
 		auto n = stod(stack.back());
 		stack.pop_back();

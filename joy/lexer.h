@@ -87,7 +87,9 @@ namespace joy {
 		static bool is_quoted(line_t& line);
 
 		//convert number to double
-		static double as_double(stack_t& token);
+		static double as_double (stack_t& stack);
+
+		static int as_bool(stack_t& token);
 
 		//check stack has at least n quoted program(s) or list(s)
 		static bool quotes(size_t n, stack_t& stack);
@@ -172,13 +174,15 @@ namespace joy {
 						stack[stack.size() - 2] = x;
 					}
 				}},
-//math
+//boolean
 {"true",	[&]() { num_parse("1"); }},
 {"false",	[&]() { num_parse("0"); }},
+{"not",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(!as_bool(stack))); } }},
+{"and",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_bool(stack) && as_bool(stack))); }  }},
+{"or",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_bool(stack) || as_bool(stack))); }  }},
+//math
 {"+",		[&]() { if (nums(2, stack)) {
-						auto y = as_double(stack);
-						auto x = as_double(stack);
-						stack.push_back(std::to_string(x + y));
+						stack.push_back(std::to_string(as_double(stack) + as_double(stack)));
 					}
 				//handle chars
 				}},
@@ -189,11 +193,7 @@ namespace joy {
 					}
 				//handle chars
 				}},
-{"*",		[&]() { if (nums(2, stack)) {
-						auto y = as_double(stack);
-						auto x = as_double(stack);
-						stack.push_back(std::to_string(x * y));
-					}}},
+{"*",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_double(stack) * as_double(stack))); } }},
 {"/",		[&]() { if (nums(2, stack)) {
 						auto y = as_double(stack);
 						auto x = as_double(stack);
@@ -204,12 +204,9 @@ namespace joy {
 						auto x = as_double(stack);
 						stack.push_back(std::to_string(fmod(x, y)));
 					}}},
-{"abs",		[&]() { if (nums(1, stack)) {
-						auto x = as_double(stack);
-						stack.push_back(std::to_string(abs(x)));
-					}}},
+{"abs",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(abs(as_double(stack)))); } }},
 {"signum",	[&]() { if (nums(1, stack)) {
-						uto x = as_double(stack);
+						auto x = as_double(stack);
 						stack.push_back(std::to_string((x > 0) - (x < 0)));
 					}}},
 //io
