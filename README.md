@@ -6,9 +6,9 @@ Inspired by the [Joy programming language](https://github.com/ifknot/joycpp/wiki
 
 [Joy Synopsis](https://github.com/ifknot/joycpp/wiki/Joy-Synopsis)
 
-[joycpp interpreter](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
+[Joy Tutorial](https://github.com/ifknot/joycpp/wiki)
 
-[Joy Tutorial](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
+[joycpp interpreter](https://github.com/ifknot/joycpp/wiki/joycpp-interpreter)
 
 
 
