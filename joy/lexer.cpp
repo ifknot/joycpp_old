@@ -11,7 +11,7 @@ namespace joy {
 			while (!line.length()) {
 				getline(std::cin, line);
 			}
-			
+
 			parse(std::move(line));
 
 			std::cout << BOLDBLACK << "\tok\n";
@@ -32,11 +32,11 @@ namespace joy {
 			}
 
 		}
-	
+
 	}
 
 	void lexer::debug(size_t error_number) {
-		std::cout << RED << "error #" << error_number << " : " <<  debug_messages[error_number] << "\n";
+		std::cout << RED << "error #" << error_number << " : " << debug_messages[error_number] << "\n";
 	}
 
 	void lexer::list_sys(cpp_dictionary_t& dictionary) {
@@ -57,7 +57,7 @@ namespace joy {
 	void lexer::parse(std::string&& line) {
 
 		std::stringstream line_stream(line);
-		token_t token; 
+		token_t token;
 
 		while (line_stream >> token) {
 
@@ -106,9 +106,10 @@ namespace joy {
 				break;
 			case state_t::parsing:
 				if ((can_parse(token, sys_atoms)) ||
-					(can_parse(token, joy_atoms)) ||				
+					(can_parse(token, joy_atoms)) ||
 					(can_parse(token, user_atoms)) ||
-					(char_parse(token))) {}
+					(char_parse(token))) {
+				}
 				else {
 					num_parse(token);
 				}
@@ -118,7 +119,7 @@ namespace joy {
 			}
 
 		}
-		
+
 	}
 
 	bool lexer::can_parse(token_t& token, cpp_dictionary_t& tokens) {
@@ -146,7 +147,7 @@ namespace joy {
 
 	bool lexer::char_parse(token_t& token) {
 		if (is_tag_char(token)) {
-			stack.push_back(token);
+			stack.push_back(std::string(1, token[1]));
 			return true;
 		}
 		else {
@@ -187,7 +188,7 @@ namespace joy {
 		if (strops) {
 			stack.back() += "] ";
 			strops--;
-			if (strops == 0) state =  state_t::parsing;
+			if (strops == 0) state = state_t::parsing;
 		}
 		else {
 			debug(DNOTSTROPPING);
@@ -206,22 +207,58 @@ namespace joy {
 		state = state_t::parsing;
 	}
 
+	bool lexer::is_bool(token_t& token) {
+		if ((token == "true") || (token == "false")) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	bool lexer::is_tag_char(token_t& token) {
 		return ((token.size() == 2) && (token[0] == '\''));
 	}
 
 	bool lexer::is_char(token_t& token) {
-		return token.size() == 1;
+		char c = token[0];
+		return (token.size() == 1) && ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'b'));
 	}
 
 	bool lexer::is_quoted(line_t& line) {
 		return ((line[0] == '[') && (line[line.size() - 2] == ']')) ? true : false;
 	}
 
-	int lexer::as_bool(stack_t& stack) {
-		bool n = stoi(stack.back());
-		stack.pop_back();
-		return n;
+	std::string lexer::stringify(bool b) {
+		return (b) ? "true" : "false";
+	}
+
+	std::string lexer::stringify(double n) {
+		switch (return_type) {
+		case pod_t::bool_t:
+			return (static_cast<bool>(n)) ? "true" : "false";
+		case pod_t::char_t:
+			std::cout << "double = " << n << "\n";
+			return std::string(1, static_cast<char>(n));
+		case pod_t::double_t:
+			return std::to_string(n);
+		default:
+			debug(DNOTYPE);
+			break;
+		}
+	}
+
+	bool lexer::as_bool(stack_t& stack) {
+		if (is_bool(stack.back())) {
+			bool b = (stack.back() == "true") ?true :false;
+			stack.pop_back();
+			return b;
+		}
+		else {
+			bool b = stoi(stack.back());
+			stack.pop_back();
+			return b;
+		}
 	}
 
 	int lexer::as_int(stack_t& stack) {
@@ -231,9 +268,20 @@ namespace joy {
 	}
 
 	double lexer::as_double(stack_t& stack) {
-		auto n = stod(stack.back());
-		stack.pop_back();
-		return n;
+		//bools as well or restrict?
+		if (is_char(stack.back())) {
+			char c = stack.back()[0];
+			std::cout << "ascii = " << (int)(c) << "\n";
+			stack.pop_back();
+			return_type = pod_t::char_t;
+			return c;
+		}
+		else {
+			auto n = stod(stack.back());
+			stack.pop_back();
+			return_type = pod_t::double_t;
+			return n;
+		}
 	}
 
 	bool lexer::quotes(size_t n, stack_t& stack) {
@@ -276,17 +324,29 @@ namespace joy {
 
 	bool lexer::nums(size_t n, stack_t& stack) {
 		if (!args(n, stack)) {
+			debug(DMALSTACK);
 			return false;
 		}
-
 		auto i = stack.size() - 1;
-		
 		for (size_t j{ 0 }; j < n; ++j) {
-			if (!is_number(stack[i--])) {
+			if ((!is_number(stack[i])) && (!is_char(stack[i]))) {
+				return false;
+			}
+			--i;
+		}
+		return true;
+	}
+
+	bool joy::lexer::bools(size_t n, stack_t& stack) {
+		if (!args(n, stack)) {
+			return false;
+		}
+		auto i = stack.size() - 1;
+		for (size_t j{ 0 }; j < n; ++j) {
+			if (!is_bool(stack[i--])) {
 				return false;
 			}
 		}
-
 		return true;
 	}
 

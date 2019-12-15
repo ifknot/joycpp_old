@@ -27,7 +27,10 @@ namespace joy {
 
 		enum class state_t { parsing, stropping, naming, pending, defining };
 
+		enum class pod_t {bool_t, char_t, int_t, double_t};
+
 		state_t state{ state_t::parsing };
+		pod_t return_type{ pod_t::double_t };
 		size_t strops{ 0 };
 		stack_t stack;
 		token_t atom_name;
@@ -66,6 +69,8 @@ namespace joy {
 
 		void undefine(stack_t& stack);
 
+		static bool is_bool(token_t& token);
+
 		//check if token is Joy format char eg `A
 		static bool is_tag_char(token_t& token);
 
@@ -89,11 +94,15 @@ namespace joy {
 		//check if string is quoted program or list
 		static bool is_quoted(line_t& line);
 
+		std::string stringify(bool b);
+
+		std::string stringify(double n);
+
 		//convert number to double
-		static double as_double (stack_t& stack);
+		double as_double (stack_t& stack);
 
 		//convert number to 0 or 1 int
-		static int as_bool(stack_t& stack);
+		static bool as_bool(stack_t& stack);
 
 		//convert number to int
 		static int as_int(stack_t& stack);
@@ -109,6 +118,9 @@ namespace joy {
 
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
+
+		//check stack has at least n bool(s)
+		static bool bools(size_t n, stack_t& stack);
 
 
 
@@ -182,40 +194,41 @@ namespace joy {
 					}
 				}},
 //boolean
-{"true",	[&]() { num_parse("1"); }},
-{"false",	[&]() { num_parse("0"); }},
-{"not",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(!as_bool(stack))); } }},
-{"and",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_bool(stack) && as_bool(stack))); }  }},
-{"or",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_bool(stack) || as_bool(stack))); }  }},
+{"true",	[&]() { stack.push_back("true"); }},
+{"false",	[&]() { stack.push_back("false"); }},
+{"not",		[&]() { if (bools(1, stack)) { stack.push_back(stringify(!as_bool(stack))); } else debug(DWRONGTYPES);}},
+{"and",		[&]() { if (bools(2, stack)) { stack.push_back(stringify(as_bool(stack) && as_bool(stack))); } else debug(DWRONGTYPES); }},
+{"or",		[&]() { if (bools(2, stack)) { stack.push_back(stringify(as_bool(stack) || as_bool(stack))); } else debug(DWRONGTYPES); }},
 //math
-{"+",		[&]() { if (nums(2, stack)) {
-						stack.push_back(std::to_string(as_double(stack) + as_double(stack)));
-					}
-				//handle chars
-				}},
+{"+",		[&]() { if (nums(2, stack)) { 
+						stack.push_back(stringify(as_double(stack) + as_double(stack))); }
+						else debug(DWRONGTYPES);
+					}},
 {"-",		[&]() { if (nums(2, stack)) {
 						auto y = as_double(stack);
 						auto x = as_double(stack);
-						stack.push_back(std::to_string(x - y));
-					}
-				//handle chars
+						stack.push_back(stringify(x - y));
+					} else debug(DWRONGTYPES);
 				}},
-{"*",		[&]() { if (nums(2, stack)) { stack.push_back(std::to_string(as_double(stack) * as_double(stack))); } }},
+{"*",		[&]() { if (nums(2, stack)) { stack.push_back(stringify(as_double(stack) * as_double(stack))); } }},
 {"/",		[&]() { if (nums(2, stack)) {
 						auto y = as_double(stack);
 						auto x = as_double(stack);
-						stack.push_back(std::to_string(x / y));
-					}}},
+						stack.push_back(stringify(x / y));
+					} else debug(DWRONGTYPES);
+				}},
 {"rem",		[&]() { if (nums(2, stack)) {
 						auto y = as_double(stack);
 						auto x = as_double(stack);
-						stack.push_back(std::to_string(fmod(x, y)));
-					}}},
-{"abs",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(abs(as_double(stack)))); } }},
+						stack.push_back(stringify(fmod(x, y)));
+					} else debug(DWRONGTYPES);
+				}},
+{"abs",		[&]() { if (nums(1, stack)) { stack.push_back(std::to_string(abs(as_double(stack)))); } else debug(DWRONGTYPES); }},
 {"signum",	[&]() { if (nums(1, stack)) {
 						auto x = as_double(stack);
 						stack.push_back(std::to_string((x > 0) - (x < 0)));
-					}}},
+					} else debug(DWRONGTYPES);
+				}},
 //io
 
 //special

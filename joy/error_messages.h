@@ -20,7 +20,9 @@ namespace joy {
 	{DEMPTYLINE, "no parse empty line"},
 	{DNOTSTROPPING, "ignored ] no matching [ "},
 	{DNOTDEFINING, "expected =="},
-	{DATOMEXISTS, "atom already exists"}
+	{DATOMEXISTS, "atom already exists"},
+	{DNOTYPE, "unrecognised type"},
+	{DWRONGTYPES, "incompatible types"}
 	};
 
 }

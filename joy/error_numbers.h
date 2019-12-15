@@ -19,4 +19,6 @@ namespace joy {
 	const size_t DNOTSTROPPING = 8;
 	const size_t DNOTDEFINING = 9;
 	const size_t DATOMEXISTS = 10;
+	const size_t DNOTYPE = 11;
+	const size_t DWRONGTYPES = 12;
 }
