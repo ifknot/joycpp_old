@@ -210,14 +210,18 @@ namespace joy {
 		return ((token.size() == 2) && (token[0] == '\''));
 	}
 
+	bool lexer::is_char(token_t& token) {
+		return token.size() == 1;
+	}
+
 	bool lexer::is_quoted(line_t& line) {
 		return ((line[0] == '[') && (line[line.size() - 2] == ']')) ? true : false;
 	}
 
 	int lexer::as_bool(stack_t& stack) {
-		auto n = stoi(stack.back());
+		bool n = stoi(stack.back());
 		stack.pop_back();
-		return (n) ? true : false;
+		return n;
 	}
 
 	double lexer::as_double(stack_t& stack) {

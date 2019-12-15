@@ -83,13 +83,20 @@ namespace joy {
 		 */
 		static bool is_number(token_t& token);
 
+		//string size 1
+		static bool is_char(token_t& token);
+
 		//check if string is quoted program or list
 		static bool is_quoted(line_t& line);
 
 		//convert number to double
 		static double as_double (stack_t& stack);
 
-		static int as_bool(stack_t& token);
+		//convert number to 0 or 1 int
+		static int as_bool(stack_t& stack);
+
+		//convert number to int
+		static int as_int(stack_t& token);
 
 		//check stack has at least n quoted program(s) or list(s)
 		static bool quotes(size_t n, stack_t& stack);
@@ -210,8 +217,7 @@ namespace joy {
 						stack.push_back(std::to_string((x > 0) - (x < 0)));
 					}}},
 //io
-{},
-{},
+
 //special
 {"quit",		[&]() { std::exit(0); }}	//Exit from Joy.
 };
