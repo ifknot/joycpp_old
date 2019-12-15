@@ -46,11 +46,15 @@ namespace joy {
 
 		void parse(line_t&& line);
 
-		bool can_parse(token_t token, cpp_dictionary_t tokens);
+		bool can_parse(token_t& token, cpp_dictionary_t& tokens);
 
-		bool can_parse(token_t token, joy_dictionary_t tokens);
+		bool can_parse(token_t& token, joy_dictionary_t& tokens);
 
-		void pod_parse(token_t token);
+		bool char_parse(token_t& token);
+
+		void num_parse(token_t& token);
+
+		void num_parse(token_t&& token); 
 
 		void quote(stack_t& stack);
 
@@ -61,6 +65,9 @@ namespace joy {
 		void define(stack_t& stack);
 
 		void undefine(stack_t& stack);
+
+		//check if token is Joy format char eg `A
+		static bool is_tag_char(token_t& token);
 
 		/**
 		 * allowed:
@@ -79,6 +86,9 @@ namespace joy {
 		//check if string is quoted program or list
 		static bool is_quoted(line_t& line);
 
+		//convert number to double
+		static double as_double(stack_t& token);
+
 		//check stack has at least n quoted program(s) or list(s)
 		static bool quotes(size_t n, stack_t& stack);
 
@@ -91,11 +101,12 @@ namespace joy {
 		//check stack has at least n number(s)
 		static bool nums(size_t n, stack_t& stack);
 
+
+
 		//------------------------------------------
 
 		cpp_dictionary_t sys_atoms = {
-//special
-{".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
+
 //defines
 {"SYSDEF", [&]() { list_sys(sys_atoms); }}, 
 {"JOYDEF", [&]() { list_joy(joy_atoms); }},
@@ -107,45 +118,48 @@ namespace joy {
 {"[",		[&]() { quote(stack); }},
 {"]",		[&]() { unquote(stack); }},
 {"cons",	[&]() { if (args(2, stack) && quotes(1, stack)) {  
-					auto s = stack.back().substr(1, stack.back().size());
-					stack.pop_back();
-					stack.back() = "[ " + stack.back() + s;} }},
+						auto s = stack.back().substr(1, stack.back().size());
+						stack.pop_back();
+						stack.back() = "[ " + stack.back() + s;
+					} }},
 {"append",  [&]() { if (args(2, stack) && quotes(1, stack)) {
-					auto s = stack.back().substr(0, stack.back().size() - 2);
-					stack.pop_back();
-					stack.back() = s + stack.back() + " ]";
+						auto s = stack.back().substr(0, stack.back().size() - 2);
+						stack.pop_back();
+						stack.back() = s + stack.back() + " ]";
 					} }},
 {"concat",	[&]() { if (quotes(2, stack)) {
-					auto s = stack.back().substr(1, stack.back().size());
-					stack.pop_back();
-					stack.back() = stack.back().substr(0, stack.back().size() - 3);
-					stack.back() += s;
+						auto s = stack.back().substr(1, stack.back().size());
+						stack.pop_back();
+						stack.back() = stack.back().substr(0, stack.back().size() - 3);
+						stack.back() += s;
 					} }}, 
 //combinators
 {"i",		[&]() { if (quotes(1, stack)) { parse(unstrop(stack)); } }},
 {"map",		[&]() { if (quotes(2, stack)) {
-					line_t prog(unstrop(stack));
-					std::stringstream args(unstrop(stack)); 
-					token_t arg, atom;
-					line_t result = "[ ";
-					stack.push_back("");
-					while (args >> arg) {
-						stack.back() = stack.back() + arg + " ";
-						std::stringstream atoms(prog);
-						while (atoms >> atom) {
-							stack.back() = stack.back() + atom + " ";
-						}
-						auto s = stack.back();
-						stack.pop_back();
-						parse(std::move(s));
-						result = result + stack.back() + " ";
-						stack.pop_back();
+						line_t prog(unstrop(stack));
+						std::stringstream args(unstrop(stack)); 
+						token_t arg, atom;
+						line_t result = "[ ";
 						stack.push_back("");
-					}
-					result += "] ";
-					stack.push_back(result);
+						while (args >> arg) {
+							stack.back() = stack.back() + arg + " ";
+							std::stringstream atoms(prog);
+							while (atoms >> atom) {
+								stack.back() = stack.back() + atom + " ";
+							}
+							auto s = stack.back();
+							stack.pop_back();
+							parse(std::move(s));
+							result = result + stack.back() + " ";
+							stack.pop_back();
+							stack.push_back("");
+						}
+						result += "] ";
+						stack.push_back(result);
 					} }},
+{"primrec",		[&]() { if (quotes(2, stack)) { } }},
 //stack operations
+{".",		[&]() { if (args(1, stack)) { std::cout << GREEN << stack.back(); } }},
 {".s",		[&]() { std::cout << GREEN;
 					for (auto rit = stack.rbegin(); rit != stack.rend(); ++rit) {
 						std::cout << *rit << std::endl;
@@ -153,64 +167,56 @@ namespace joy {
 {"dup",		[&]() { if (args(1, stack)) { stack.push_back(stack.back()); } }},
 {"pop",		[&]() { if (args(1, stack)) { stack.pop_back(); } }},
 {"swap",	[&]() { if (args(2, stack)) {
-					auto x = stack[stack.size() - 1];
-					stack[stack.size() - 1] = stack[stack.size() - 2];
-					stack[stack.size() - 2] = x;
+						auto x = stack[stack.size() - 1];
+						stack[stack.size() - 1] = stack[stack.size() - 2];
+						stack[stack.size() - 2] = x;
 					}
-					}},
+				}},
 //math
-{"true",	[&]() { pod_parse("1"); }},
-{"false",	[&]() { pod_parse("0"); }},
+{"true",	[&]() { num_parse("1"); }},
+{"false",	[&]() { num_parse("0"); }},
 {"+",		[&]() { if (nums(2, stack)) {
-					auto y = stod(stack.back());
-					stack.pop_back();
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(x + y));
-			}}},
+						auto y = as_double(stack);
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(x + y));
+					}
+				//handle chars
+				}},
 {"-",		[&]() { if (nums(2, stack)) {
-					auto y = stod(stack.back());
-					stack.pop_back();
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(x - y));
-			}}},
+						auto y = as_double(stack);
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(x - y));
+					}
+				//handle chars
+				}},
 {"*",		[&]() { if (nums(2, stack)) {
-					auto y = stod(stack.back());
-					stack.pop_back();
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(x * y));
-			}}},
+						auto y = as_double(stack);
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(x * y));
+					}}},
 {"/",		[&]() { if (nums(2, stack)) {
-					auto y = stod(stack.back());
-					stack.pop_back();
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(x / y));
-			}}},
+						auto y = as_double(stack);
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(x / y));
+					}}},
 {"rem",		[&]() { if (nums(2, stack)) {
-					auto y = stod(stack.back());
-					stack.pop_back();
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(fmod(x, y)));
-			}}},
+						auto y = as_double(stack);
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(fmod(x, y)));
+					}}},
 {"abs",		[&]() { if (nums(1, stack)) {
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string(abs(x)));
-			}}},
+						auto x = as_double(stack);
+						stack.push_back(std::to_string(abs(x)));
+					}}},
 {"signum",	[&]() { if (nums(1, stack)) {
-					auto x = stod(stack.back());
-					stack.pop_back();
-					stack.push_back(std::to_string((x > 0) - (x < 0)));
-			}}},
-				//io
-				{},
-				{},
-				//special
-				{"quit",		[&]() { std::exit(0); }}	//Exit from Joy.
+						uto x = as_double(stack);
+						stack.push_back(std::to_string((x > 0) - (x < 0)));
+					}}},
+//io
+{},
+{},
+//special
+{"quit",		[&]() { std::exit(0); }}	//Exit from Joy.
 };
 
 joy_dictionary_t joy_atoms {

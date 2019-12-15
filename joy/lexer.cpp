@@ -107,9 +107,10 @@ namespace joy {
 			case state_t::parsing:
 				if ((can_parse(token, sys_atoms)) ||
 					(can_parse(token, joy_atoms)) ||				
-					(can_parse(token, user_atoms))) {}
+					(can_parse(token, user_atoms)) ||
+					(char_parse(token))) {}
 				else {
-					pod_parse(token);
+					num_parse(token);
 				}
 				break;
 			default:
@@ -120,7 +121,7 @@ namespace joy {
 		
 	}
 
-	bool lexer::can_parse(token_t token, cpp_dictionary_t tokens) {
+	bool lexer::can_parse(token_t& token, cpp_dictionary_t& tokens) {
 		auto it = sys_atoms.find(token);
 		if (it != sys_atoms.end()) {
 			(it->second)();
@@ -131,7 +132,7 @@ namespace joy {
 		}
 	}
 
-	bool lexer::can_parse(token_t token, joy_dictionary_t dictionary) {
+	bool lexer::can_parse(token_t& token, joy_dictionary_t& dictionary) {
 		auto it = dictionary.find(token);
 		if (it != dictionary.end()) {
 			auto s = it->second;
@@ -143,7 +144,17 @@ namespace joy {
 		}
 	}
 
-	void lexer::pod_parse(token_t token) {
+	bool lexer::char_parse(token_t& token) {
+		if (is_tag_char(token)) {
+			stack.push_back(token);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	void lexer::num_parse(token_t& token) {
 		try {
 			double x = std::stod(token);
 			stack.push_back(token);
@@ -154,6 +165,10 @@ namespace joy {
 		catch (std::out_of_range) {
 			debug(DOUTRANGE);
 		}
+	}
+
+	void lexer::num_parse(token_t&& token) {
+		auto s(token); num_parse(s);
 	}
 
 	void lexer::quote(stack_t& stack) {
@@ -191,8 +206,18 @@ namespace joy {
 		state = state_t::parsing;
 	}
 
+	bool lexer::is_tag_char(token_t& token) {
+		return ((token.size() == 2) && (token[0] == '\''));
+	}
+
 	bool lexer::is_quoted(line_t& line) {
 		return ((line[0] == '[') && (line[line.size() - 2] == ']')) ? true : false;
+	}
+
+	double lexer::as_double(stack_t& stack) {
+		auto n = stod(stack.back());
+		stack.pop_back();
+		return n;
 	}
 
 	bool lexer::quotes(size_t n, stack_t& stack) {
