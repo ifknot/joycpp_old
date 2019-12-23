@@ -1,4 +1,5 @@
-# joycpp a Joy interpretor written in C++
+#<deprecated> This quick and dirty POC has been renamed joycpp_old and deprecated in favour of joy_cpp
+## joycpp(old) a Joy interpretor written in C++
 
 ![joy logo](https://cldup.com/zIkm02BrOD.jpg)
 
